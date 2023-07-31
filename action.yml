@@ -138,6 +138,18 @@ runs:
         build_log="${build_log//$'\n'/'%0A'}"
         build_log="${build_log//$'\r'/'%0D'}"
         echo "text=$build_log" >> $GITHUB_OUTPUT
+
+        # Check the status
+        build_status=$(curl -fsS "https://api.heroku.com/apps/${{ inputs.heroku_app_name }}/builds/${{ steps.create_build.outputs.id }}" \
+          -H 'Authorization: Bearer ${{ inputs.heroku_api_key }}' \
+          -H 'Accept: application/vnd.heroku+json; version=3' \
+          | jq -rc '.status' \
+        )
+        if [[ $build_status != "succeeded" ]]; then
+          echo "Build failed..."
+          exit 1
+        fi
+
     - id: promote
       name: Promote
       if: steps.pipeline_check.outputs.pipeline_id
@@ -194,6 +206,17 @@ runs:
         release_log="${release_log//$'\n'/'%0A'}"
         release_log="${release_log//$'\r'/'%0D'}"
         echo "text=$release_log" >> $GITHUB_OUTPUT
+
+        # Check the status
+        release_status=$(curl -fsS "https://api.heroku.com/apps/${{ inputs.heroku_app_name }}/releases/${{ steps.get_release.outputs.id }}" \
+          -H 'Authorization: Bearer ${{ inputs.heroku_api_key }}' \
+          -H 'Accept: application/vnd.heroku+json; version=3' \
+          | jq -rc '.status' \
+        )
+        if [[ $release_status != "succeeded" ]]; then
+          echo "Release failed..."
+          exit 1
+        fi
 
 branding:
   color: green
