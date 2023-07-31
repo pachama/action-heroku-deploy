@@ -140,7 +140,7 @@ runs:
         echo "text=$build_log" >> $GITHUB_OUTPUT
 
         # Check the status
-        for ((i=1; i<=10; i++)); do
+        for ((i=1; i<=30; i++)); do
           build_status=$(curl -fsS "https://api.heroku.com/apps/${{ inputs.heroku_app_name }}/builds/${{ steps.create_build.outputs.id }}" \
             -H 'Authorization: Bearer ${{ inputs.heroku_api_key }}' \
             -H 'Accept: application/vnd.heroku+json; version=3' \
@@ -209,7 +209,7 @@ runs:
         echo "text=$release_log" >> $GITHUB_OUTPUT
 
         # Check the status
-        for ((i=1; i<=10; i++)); do
+        for ((i=1; i<=30; i++)); do
           release_status=$(curl -fsS "https://api.heroku.com/apps/${{ inputs.heroku_app_name }}/releases/${{ steps.get_release.outputs.id }}" \
             -H 'Authorization: Bearer ${{ inputs.heroku_api_key }}' \
             -H 'Accept: application/vnd.heroku+json; version=3' \
