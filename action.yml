@@ -140,15 +140,16 @@ runs:
         echo "text=$build_log" >> $GITHUB_OUTPUT
 
         # Check the status
-        build_status=$(curl -fsS "https://api.heroku.com/apps/${{ inputs.heroku_app_name }}/builds/${{ steps.create_build.outputs.id }}" \
-          -H 'Authorization: Bearer ${{ inputs.heroku_api_key }}' \
-          -H 'Accept: application/vnd.heroku+json; version=3' \
-          | jq -rc '.status' \
-        )
-        if [[ $build_status != "succeeded" ]]; then
-          echo "Build failed..."
-          exit 1
-        fi
+        for ((i=1; i<=30; i++)); do
+          build_status=$(curl -fsS "https://api.heroku.com/apps/${{ inputs.heroku_app_name }}/builds/${{ steps.create_build.outputs.id }}" \
+            -H 'Authorization: Bearer ${{ inputs.heroku_api_key }}' \
+            -H 'Accept: application/vnd.heroku+json; version=3' \
+            | jq -rc '.status')
+          [[ $build_status == "succeeded" ]] && exit 0
+          [[ $build_status != "pending" ]] && exit 1
+          sleep 1
+        done
+        echo "Timed out"; exit 1
 
     - id: promote
       name: Promote
@@ -208,15 +209,16 @@ runs:
         echo "text=$release_log" >> $GITHUB_OUTPUT
 
         # Check the status
-        release_status=$(curl -fsS "https://api.heroku.com/apps/${{ inputs.heroku_app_name }}/releases/${{ steps.get_release.outputs.id }}" \
-          -H 'Authorization: Bearer ${{ inputs.heroku_api_key }}' \
-          -H 'Accept: application/vnd.heroku+json; version=3' \
-          | jq -rc '.status' \
-        )
-        if [[ $release_status != "succeeded" ]]; then
-          echo "Release failed..."
-          exit 1
-        fi
+        for ((i=1; i<=30; i++)); do
+          release_status=$(curl -fsS "https://api.heroku.com/apps/${{ inputs.heroku_app_name }}/releases/${{ steps.get_release.outputs.id }}" \
+            -H 'Authorization: Bearer ${{ inputs.heroku_api_key }}' \
+            -H 'Accept: application/vnd.heroku+json; version=3' \
+            | jq -rc '.status')
+          [[ $release_status == "succeeded" ]] && exit 0
+          [[ $release_status != "pending" ]] && exit 1
+          sleep 1
+        done
+        echo "Timed out"; exit 1
 
 branding:
   color: green
